@@ -49,21 +49,29 @@ public class BluetoothActivity extends AppCompatActivity {
 
         findViewById();
 
+        //取得從MainActivity 傳來的資料
         GetIntent();
+
+        //設定Bluetooth Device Name 至 TextView
         tv_DeviceName.setText(mDeviceName);
+
+        //設定Button OnClickListener
         btn_Read.setOnClickListener(new Button.OnClickListener(){
             @Override
             public void onClick(View v) {
+                // readCharacteristic [ GATT Service(197a1820-13ce-11e5-a56d-0002a5d5c51b) 至 Characteristic (197a2aa3-13ce-11e5-a56d-0002a5d5c51b) ]
                 BluetoothGattCharacteristic characteristic1 = mBluetoothLEService.getUUIDService("197a1820-13ce-11e5-a56d-0002a5d5c51b").getCharacteristic(UUID.fromString("197a2aa3-13ce-11e5-a56d-0002a5d5c51b"));
                 mBluetoothLEService.readCharacteristic(characteristic1);
             }
         });
+        //啟動GATT Service
         EnableService();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        //建立 registerReceiver
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         if (mBluetoothLEService != null) {
             final boolean result = mBluetoothLEService.connect(mDeviceAddress);
@@ -73,6 +81,7 @@ public class BluetoothActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //註銷 GATT Service
         unbindService(mServiceConnection);
         mBluetoothLEService = null;
     }
@@ -80,10 +89,12 @@ public class BluetoothActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        //註銷 GATT Service
         unregisterReceiver(mGattUpdateReceiver);
     }
 
     private void EnableService() {
+        //啟動GATT Service
         Intent gattServiceIntent = new Intent(BluetoothActivity.this, BluetoothLEService.class);
         bindService(gattServiceIntent, mServiceConnection , BIND_AUTO_CREATE);
     }
@@ -92,11 +103,13 @@ public class BluetoothActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mBluetoothLEService = ((BluetoothLEService.LocalBinder) service).getService();
+            // BluetoothLE Service 初始化
             if (!mBluetoothLEService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 finish();
             }
             Log.i(TAG, "initialize Bluetooth");
+            //連線到Bluetooth Device Address
             mBluetoothLEService.connect(mDeviceAddress);
         }
 
@@ -126,20 +139,28 @@ public class BluetoothActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLEService.ACTION_GATT_CONNECTED.equals(action)) {
+                //連線到GATT服務時
                 tv_ConnentStatus.setText("connecnt");
             } else if (BluetoothLEService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                //與GATT服務斷開時
                 tv_ConnentStatus.setText("disconnecnt");
             } else if (BluetoothLEService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                //探索GATT的服務(可以在這撰寫 fucntion 去取得該設備 characteristic 和 descriptor)
                 Log.d(TAG, "ACTION_GATT_SERVICES_DISCOVERED");
             } else if (BluetoothLEService.ACTION_DATA_AVAILABLE.equals(action)) {
+                //取得資料時
                 Log.d(TAG, "ACTION_DATA_AVAILABLE");
+                //該設備 characteristic 的 uuid
                 final String uuid = intent.getStringExtra(BluetoothLEService.EXTRA_UUID_CHAR);
+                //資料陣列
                 final byte[] dataArr = intent.getByteArrayExtra(BluetoothLEService.EXTRA_DATA_RAW);
 
+                //將取到的Byte 轉成二進制的字串
                 final StringBuilder stringBuilder = new StringBuilder(dataArr.length);
                 for(byte byteChar : dataArr)
                     stringBuilder.append(String.format("%8s ", Integer.toBinaryString(byteChar & 0xFF)).replace(' ', '0'));
 
+                //197a2aa3-13ce-11e5-a56d-0002a5d5c51b  取得Dn 的 Size 需要多少個 Bit
                 if(uuid.equals("197a2aa3-13ce-11e5-a56d-0002a5d5c51b")){
                     DR = stringBuilder.toString().substring(0,4);
                     G = stringBuilder.toString().substring(4,8);
@@ -148,6 +169,7 @@ public class BluetoothActivity extends AppCompatActivity {
                     BluetoothGattCharacteristic  characteristic2 = mBluetoothLEService.getUUIDService("197a1820-13ce-11e5-a56d-0002a5d5c51b").getCharacteristic(UUID.fromString("197a2aa1-13ce-11e5-a56d-0002a5d5c51b"));
                     mBluetoothLEService.setCharacteristicNotification(characteristic2,true);
                 }
+                //197a2aa1-13ce-11e5-a56d-0002a5d5c51b  取的ECG的資料
                 else if(uuid.equals("197a2aa1-13ce-11e5-a56d-0002a5d5c51b")){
                     Byte PN_byte = Byte.parseByte(stringBuilder.toString().substring(8,12),2);
                     String PN = Byte.toString(PN_byte);

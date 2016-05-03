@@ -35,11 +35,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //存放搜尋到的Bluetooth Device Address
         mDeviceAddressSet = new HashSet<>();
 
         findViewById();
+        //設定ListView  Adapter
         SetListAdapter();
+        //Bluetooth 初始化
         BluetoothLEinit();
+        //設定按鈕 Listener
         ButtonClickListener();
 
     }
@@ -48,10 +52,12 @@ public class MainActivity extends AppCompatActivity {
         scan.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //如果不在Bluetooth 搜尋狀態，就clear ListView的數值
                 if(!mBluetoothLEScanner.isScanning()){
                     listAdapter.clear();
                     mDeviceAddressSet.clear();
                 }
+                //搜尋開始(10秒)
                 mBluetoothLEScanner.scanLeDevice(10000,true);
             }
         });
@@ -59,7 +65,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void BluetoothLEinit() {
         mBluetoothLEUtils = new BluetoothLEUtils(this);
+        //檢查是否支援BLE
         mBluetoothLEUtils.CheckSupportBLE();
+        //檢查Bluetooth 是否開啟
         mBluetoothLEUtils.CheckEnableBT();
         mBluetoothLEScanner = new BluetoothLEScanner( mBluetoothLEUtils , mLeScanCallback);
     }
@@ -98,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             String info = ((TextView) view).getText().toString();
             Log.i(TAG,info);
+
+            //將info 資料傳到 BluetoothActivity
             Intent intent = new Intent(MainActivity.this,BluetoothActivity.class);
             intent.putExtra("Info",info);
             startActivity(intent);
