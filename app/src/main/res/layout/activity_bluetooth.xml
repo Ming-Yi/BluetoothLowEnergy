@@ -22,29 +22,12 @@
         android:id="@+id/TextView_ConnectStatus" />
 
 
-    <ListView
+    <Button
         android:layout_width="match_parent"
-        android:layout_height="405dp"
-        android:id="@+id/listView_characteristics"
-        android:layout_gravity="center_horizontal" />
+        android:layout_height="wrap_content"
+        android:text="Read"
+        android:id="@+id/btn_Read"
+        android:layout_weight="1" />
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
 
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Read"
-            android:id="@+id/btn_Read"
-            android:layout_weight="1" />
-
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Back"
-            android:id="@+id/button"
-            android:layout_weight="1" />
-    </LinearLayout>
 </LinearLayout>

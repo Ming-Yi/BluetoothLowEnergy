@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.yi.ming.bleclass.BluetoothLEService;
@@ -32,9 +33,12 @@ public class BluetoothActivity extends AppCompatActivity {
     private BluetoothLEService mBluetoothLEService;
 
     TextView tv_DeviceName,tv_ConnentStatus;
-    ListView lv_characteristics;
+
     Button btn_Read;
     String mDeviceAddress,mDeviceName;
+
+    String DR,G,NB;
+    int Nbit,Nnumb;
 
     private List<List<BluetoothGattCharacteristic>> mGattCharacteristics = new ArrayList<>();
 
@@ -47,14 +51,11 @@ public class BluetoothActivity extends AppCompatActivity {
 
         GetIntent();
         tv_DeviceName.setText(mDeviceName);
-
         btn_Read.setOnClickListener(new Button.OnClickListener(){
             @Override
             public void onClick(View v) {
-                BluetoothGattCharacteristic characteristic = mBluetoothLEService.getUUIDService("197a1820-13ce-11e5-a56d-0002a5d5c51b").getCharacteristic(UUID.fromString("197a2aa2-13ce-11e5-a56d-0002a5d5c51b"));
-                mBluetoothLEService.readCharacteristic(characteristic);
-                characteristic = mBluetoothLEService.getUUIDService("197a1820-13ce-11e5-a56d-0002a5d5c51b").getCharacteristic(UUID.fromString("197a2aa1-13ce-11e5-a56d-0002a5d5c51b"));
-                mBluetoothLEService.setCharacteristicNotification(characteristic,true);
+                BluetoothGattCharacteristic characteristic1 = mBluetoothLEService.getUUIDService("197a1820-13ce-11e5-a56d-0002a5d5c51b").getCharacteristic(UUID.fromString("197a2aa3-13ce-11e5-a56d-0002a5d5c51b"));
+                mBluetoothLEService.readCharacteristic(characteristic1);
             }
         });
         EnableService();
@@ -68,6 +69,18 @@ public class BluetoothActivity extends AppCompatActivity {
             final boolean result = mBluetoothLEService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
         }
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(mServiceConnection);
+        mBluetoothLEService = null;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mGattUpdateReceiver);
     }
 
     private void EnableService() {
@@ -98,7 +111,6 @@ public class BluetoothActivity extends AppCompatActivity {
     private void findViewById() {
         tv_DeviceName = (TextView) findViewById(R.id.TextView_BName);
         tv_ConnentStatus = (TextView) findViewById(R.id.TextView_ConnectStatus);
-        lv_characteristics = (ListView) findViewById(R.id.listView_characteristics);
         btn_Read = (Button) findViewById(R.id.btn_Read);
     }
 
@@ -119,8 +131,6 @@ public class BluetoothActivity extends AppCompatActivity {
                 tv_ConnentStatus.setText("disconnecnt");
             } else if (BluetoothLEService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 Log.d(TAG, "ACTION_GATT_SERVICES_DISCOVERED");
-//                displayGattServices(mBluetoothLEService.getSupportedGattServices());
-//                handleGattServices(mBluetoothLEService.getUUIDService("197a1820-13ce-11e5-a56d-0002a5d5c51b"));
             } else if (BluetoothLEService.ACTION_DATA_AVAILABLE.equals(action)) {
                 Log.d(TAG, "ACTION_DATA_AVAILABLE");
                 final String uuid = intent.getStringExtra(BluetoothLEService.EXTRA_UUID_CHAR);
@@ -130,28 +140,47 @@ public class BluetoothActivity extends AppCompatActivity {
                 for(byte byteChar : dataArr)
                     stringBuilder.append(String.format("%8s ", Integer.toBinaryString(byteChar & 0xFF)).replace(' ', '0'));
 
-                if(uuid.equals("197a2aa2-13ce-11e5-a56d-0002a5d5c51b")){
-                    String DR = stringBuilder.toString().substring(0,4);
-                    String G = stringBuilder.toString().substring(4,8);
-                    String NB = stringBuilder.toString().substring(8,12);
-                    Log.i(TAG,stringBuilder.toString() );
-                    Log.i(TAG,
-                            "DR:"+ DR  + "\n" +
-                            "G:" + G + "\n" +
-                            "NB:"+ NB);
+                if(uuid.equals("197a2aa3-13ce-11e5-a56d-0002a5d5c51b")){
+                    DR = stringBuilder.toString().substring(0,4);
+                    G = stringBuilder.toString().substring(4,8);
+                    NB = stringBuilder.toString().substring(8,12);
+
+                    BluetoothGattCharacteristic  characteristic2 = mBluetoothLEService.getUUIDService("197a1820-13ce-11e5-a56d-0002a5d5c51b").getCharacteristic(UUID.fromString("197a2aa1-13ce-11e5-a56d-0002a5d5c51b"));
+                    mBluetoothLEService.setCharacteristicNotification(characteristic2,true);
                 }
                 else if(uuid.equals("197a2aa1-13ce-11e5-a56d-0002a5d5c51b")){
-                    String DR = stringBuilder.toString().substring(0,4);
-                    String G = stringBuilder.toString().substring(4,8);
                     Byte PN_byte = Byte.parseByte(stringBuilder.toString().substring(8,12),2);
                     String PN = Byte.toString(PN_byte);
                     Byte PL_byte = Byte.parseByte(stringBuilder.toString().substring(12,16),2);
                     String PL = Byte.toString(PL_byte);
 
-                    Log.i(TAG,"DR:"+ DR);
-                    Log.i(TAG,"G:"+ G);
                     Log.i(TAG,"PN:"+ PN);
                     Log.i(TAG,"PL:"+ PL);
+
+                    switch(NB){
+                        case "0001":
+                            Nbit = 8 ;
+                            Nnumb = 18;
+                            break;
+                        case "0010":
+                            Nbit=10;
+                            Nnumb = 14;
+                            break;
+                        case "0100":
+                            Nbit=12;
+                            Nnumb = 12;
+                            break;
+                        case "1000":
+                            Nbit=14;
+                            Nnumb = 10;
+                            break;
+                    }
+                    String DN = stringBuilder.toString().substring(15,stringBuilder.toString().length());
+                    ArrayList data = new ArrayList();
+                    for(int i=0 ; i < Nnumb ; i++){
+                        data.add( binaryToHex(DN.substring(i*Nbit,(i+1)*Nbit)));
+                    }
+                    Log.i(TAG,"DN:"+data);
                 }
 
 
@@ -159,10 +188,9 @@ public class BluetoothActivity extends AppCompatActivity {
         }
     };
 
-    private void handleGattServices(BluetoothGattService uuidService) {
-        final List<BluetoothGattCharacteristic> gattCharacteristics = uuidService.getCharacteristics();
+    public static int binaryToHex(String bin) {
+        return Integer.parseInt(bin, 2);
     }
-
 
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
