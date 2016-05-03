@@ -1,11 +1,13 @@
 # Bluetooth Low Energy #
 ## 權限(Permission) ##
 - 在Androidmanifest.xml
+
 	```
 	<uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 	```
 - 及Androidmanifest.xml 的 `<application>` 標籤中加上
+
 	```
     <service android:name="com.yi.ming.bleclass.BluetoothLEService"
              android:enabled="true" />
@@ -16,6 +18,7 @@
 	- CheckSupportBLE() : 檢查裝置是否支援BLE。
 	- CheckEnableBT() : 檢查Bluetooth是否啟動，沒啟動則會有Dialog給使用者啟動。
 	- EX:
+	
 		```java
 	    mBluetoothLEUtils = new BluetoothLEUtils(this);
 	    mBluetoothLEUtils.CheckSupportBLE();
@@ -23,12 +26,16 @@
 		``` 
 2. **BluetoothLEScanner** : 取得附近的Bluetooth裝置。
 	- BluetoothLEScanner(final BluetoothLEUtils bluetoothUtils , final BluetoothAdapter.LeScanCallback leScanCallback) : 建構子。
+	
 		> **BluetoothAdapter.LeScanCallback** : 搜尋到裝置後的Callback function
 	- scanLeDevice(final int duration, final boolean enable) : 搜索附近的藍芽設備。
+	
 		> **duration** : 掃秒時間  ，**enable** : 是否啟動搜索
 	- isScanning() : 判斷目前是不是在搜索藍芽設備。
+	
 	    > **return** : true -> 裝置搜索中  ，false -> 未啟動搜索
 	- EX:
+	
 		```java
 		//BluetoothLEScanner 宣告
 		BluetoothLEScanner mBluetoothLEScanner = new BluetoothLEScanner( mBluetoothLEUtils , mLeScanCallback);
@@ -55,6 +62,7 @@
 		```
 3. **BluetoothLEService**
 	- 設定廣播 Receiver。
+	
 		```
 		registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 	    ```
@@ -91,6 +99,7 @@
 	    }
 		```
 	- 啟動BLE服務 並且連線到 mDeviceAddress 裝置。
+	
 		```
 		Intent gattServiceIntent = new Intent(BluetoothActivity.this, BluetoothLEService.class);
         bindService(gattServiceIntent, mServiceConnection , BIND_AUTO_CREATE);
@@ -117,13 +126,16 @@
 		};
 		```
 	- 連線特定的 characteristic (Read) : 只會讀一次 Bluetooth Device 的資料。
+	
 		```
         BluetoothGattCharacteristic characteristic = mBluetoothLEService.getUUIDService({GATT Servece UUID}).getCharacteristic(UUID.fromString({特定 characteristic UUID}));
         mBluetoothLEService.readCharacteristic(characteristic);			
 		```
 	- 連線特定的 characteristic (Notification) : Bluetooth Device 有回覆資料就會接收。
+	
 		```
         BluetoothGattCharacteristic  characteristic = mBluetoothLEService.getUUIDService({GATT Servece UUID}).getCharacteristic(UUID.fromString({特定 characteristic UUID}));
         mBluetoothLEService.setCharacteristicNotification(characteristic,true);			
 		```
+
 	> Read 和 Notification 都會在Receiver 的 BluetoothLEService.ACTION_DATA_AVAILABLE 去處理資料。
