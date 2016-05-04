@@ -63,10 +63,11 @@
 3. **BluetoothLEService**
 	- 設定廣播 Receiver。
 	
-		```
+		```java
 		registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 	    ```
-		```
+
+		```java
 		private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
 	        @Override
 	        public void onReceive(Context context, Intent intent) {
@@ -100,11 +101,12 @@
 		```
 	- 啟動BLE服務 並且連線到 mDeviceAddress 裝置。
 	
-		```
+		```java
 		Intent gattServiceIntent = new Intent(BluetoothActivity.this, BluetoothLEService.class);
         bindService(gattServiceIntent, mServiceConnection , BIND_AUTO_CREATE);
 		```
-		```
+
+		```java
 		private final ServiceConnection mServiceConnection = new ServiceConnection() {
 		    @Override
 		    public void onServiceConnected(ComponentName name, IBinder service) {
@@ -127,13 +129,14 @@
 		```
 	- 連線特定的 characteristic (Read) : 只會讀一次 Bluetooth Device 的資料。
 	
-		```
+		```java
         BluetoothGattCharacteristic characteristic = mBluetoothLEService.getUUIDService({GATT Servece UUID}).getCharacteristic(UUID.fromString({特定 characteristic UUID}));
         mBluetoothLEService.readCharacteristic(characteristic);			
 		```
+		
 	- 連線特定的 characteristic (Notification) : Bluetooth Device 有回覆資料就會接收。
 	
-		```
+		```java
         BluetoothGattCharacteristic  characteristic = mBluetoothLEService.getUUIDService({GATT Servece UUID}).getCharacteristic(UUID.fromString({特定 characteristic UUID}));
         mBluetoothLEService.setCharacteristicNotification(characteristic,true);			
 		```
